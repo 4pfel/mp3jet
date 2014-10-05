@@ -1,0 +1,99 @@
+#!/usr/bin/perl
+
+# -----------------------------------------------------------------------------
+# "THE BEER-WARE LICENSE" (Revision 42):
+#<simon.mages@gmail.com> wrote this file. As long as you retain this notice you
+# can do whatever you want with this stuff. If we meet some day, and you think
+# this stuff is worth it, you can buy me a beer in return.         Simon Mages
+# -----------------------------------------------------------------------------
+
+# this is a very simple CUPS backend to play mp3 files
+# just print your mp3 file with lpr like so:
+#    $ lpr -H my_cups_ip -P mp3_queue_name greate_mp3.mp3
+# 
+# don't forget to share your printer in the network, so
+# that everyone can print mp3's.
+#
+# to control the mp3 spooler just use the CUPS webinterface.
+# Everyone can take a look on the "playlist" and the admin
+# can cancle songs and is able to move songs in the playlist
+
+
+# TODO:
+# 1. determine the mimetype of the incomming stream so we prevent some clowns
+#    from playing mp3's with mplayer ... or OCR this stream and use a text to
+#    speech engine to play the "song" ;)
+# 2. make this thing more variable, a config file would be nice to set some
+#    variables like $PLAYER_STR and so on
+# 3. i also thought about a simple plugininterface so that the printed file
+#    can be pre- or postprocessed, like copy those files to a public location
+# 4. ... feel free to add points here
+
+use strict;
+use warnings;
+
+# if the cups admin is pressing the cancel button on the
+# joboverview then the SIGTERM is trigger on the running
+# backend, this is the handler for that
+#
+# the returnvalue 5 is CUPS_BACKEND_CANCEL trigger for
+# CUPS, so the job will be chanceld
+$SIG{TERM} = sub {
+    print STDERR "INFO: stoped playback.\n";
+    print STDERR "STATE: -playing\n";
+    exit 5;
+};
+
+my $PLAYER_STR = "/usr/local/bin/mplayer";
+my $PARAMS_STR = "-";
+my $PLUGIN_DIR = "";
+
+# to be filled by load_plugins()
+my $PLUGIN_BEVORE = "";
+my $PLUGIN_AFTER = "";
+
+if (!@ARGV) {
+    print 'direct mp3jet "Unknown" "mp3"';
+    exit 0;
+}
+
+{
+    #_read_conf();
+    #_load_plugins();
+    #_run_pre_plugins();
+
+    open my $audio, "|-", $PLAYER_STR, $PARAMS_STR
+	or die "das geht ned!\n";
+
+    print STDERR "INFO: playing: $ARGV[2]\n";
+    print STDERR "STATE: +playing\n";
+    while (<>) {
+	print $audio $_;
+    }
+    print STDERR "INFO: stoped playback.\n";
+    print STDERR "STATE: -playing\n";
+
+    close ($audio);
+
+    #_run_post_plugins();
+
+    exit 0;
+}
+
+sub _read_conf {
+    # read some values from a config file
+    # like $PLAYER_STR and $PARAMS_STR
+    return 1;
+}
+
+sub _load_plugins {
+    return 1;
+}
+
+sub _run_pre_plugins {
+    return 1;
+}
+
+sub _run_post_plugins {
+    return 1;
+}
